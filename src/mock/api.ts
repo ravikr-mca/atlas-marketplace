@@ -24,12 +24,16 @@ export async function fetchFundVehicles(): Promise<FundVehicle[]> {
   return delay(fundVehicleStore);
 }
 
-export async function fetchFundVehicle(id: string): Promise<FundVehicle | undefined> {
-  return delay(fundVehicleStore.find((f) => f.id === id));
+// Returns `| null`, not `| undefined` — TanStack Query treats a queryFn resolving to
+// `undefined` as an error (it requires an explicit "no data" value), so `.find()`'s
+// undefined has to be normalized here or every "not found" case would render as a
+// fetch failure instead of a real not-found state.
+export async function fetchFundVehicle(id: string): Promise<FundVehicle | null> {
+  return delay(fundVehicleStore.find((f) => f.id === id) ?? null);
 }
 
-export async function fetchOrganization(id: string): Promise<Organization | undefined> {
-  return delay(organizations.find((o) => o.id === id));
+export async function fetchOrganization(id: string): Promise<Organization | null> {
+  return delay(organizations.find((o) => o.id === id) ?? null);
 }
 
 export async function fetchOrganizations(): Promise<Organization[]> {

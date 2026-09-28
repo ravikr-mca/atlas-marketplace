@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  Alert,
   Box,
   Card,
   CardActionArea,
@@ -26,7 +27,7 @@ const statusColor: Record<string, 'default' | 'success' | 'warning' | 'error'> =
 };
 
 export function FundVehicleListPage() {
-  const { data: funds, isLoading } = useFundVehicles();
+  const { data: funds, isLoading, isError, refetch } = useFundVehicles();
   const [strategyFilter, setStrategyFilter] = useState<FundStrategy | 'ALL'>('ALL');
 
   const filtered = useMemo(
@@ -69,6 +70,31 @@ export function FundVehicleListPage() {
       </Stack>
 
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+
+      {isError && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Typography
+              component="button"
+              onClick={() => refetch()}
+              variant="body2"
+              sx={{ border: 0, bgcolor: 'transparent', cursor: 'pointer', fontWeight: 600, color: 'inherit' }}
+            >
+              Retry
+            </Typography>
+          }
+        >
+          Couldn't load fund vehicles. Please try again.
+        </Alert>
+      )}
+
+      {!isLoading && !isError && filtered.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          No fund vehicles match this filter.
+        </Typography>
+      )}
 
       <Stack spacing={2}>
         {filtered.map((fund) => {

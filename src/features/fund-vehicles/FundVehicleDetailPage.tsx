@@ -1,5 +1,5 @@
-import { useParams } from 'react-router-dom';
-import { Box, Chip, Grid, LinearProgress, Skeleton, Stack, Typography } from '@mui/material';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Alert, Box, Button, Chip, Grid, LinearProgress, Skeleton, Stack, Typography } from '@mui/material';
 import { useFundVehicle, useOrganization } from './queries';
 import { formatUsdCompact, strategyLabel, fundStatusLabel } from '../../lib/format';
 import { TiptapViewer } from './components/TiptapViewer';
@@ -9,11 +9,27 @@ import { IndicationOfInterestForm } from './components/IndicationOfInterestForm'
 
 export function FundVehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: fund, isLoading } = useFundVehicle(id ?? '');
+  const { data: fund, isLoading, isError, refetch } = useFundVehicle(id ?? '');
   const { data: gp } = useOrganization(fund?.gpOrganizationId);
 
-  if (isLoading || !fund) {
+  if (isLoading) {
     return <Skeleton variant="rounded" height={240} />;
+  }
+
+  if (isError) {
+    return (
+      <Alert severity="error" action={<Button onClick={() => refetch()}>Retry</Button>}>
+        Couldn't load this fund. Please try again.
+      </Alert>
+    );
+  }
+
+  if (!fund) {
+    return (
+      <Alert severity="warning" action={<Button component={RouterLink} to="/">Back to Fund Vehicles</Button>}>
+        This fund vehicle doesn't exist or is no longer listed.
+      </Alert>
+    );
   }
 
   const pctSubscribed = Math.min(100, Math.round((fund.committedUsd / fund.hardCapUsd) * 100));
