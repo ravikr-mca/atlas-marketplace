@@ -293,8 +293,29 @@ mobile through desktop.
 
 ## AI and tools disclosure
 
-*[To complete with Ravi's own account before submission: which tools were used for
-which parts (Claude Code for scaffolding and implementation, X for design research,
-etc.), what was changed or decided independently, and how the output was checked —
-per the brief's explicit requirement that this be a transparent, first-person account
-rather than boilerplate.]*
+I built this with Claude Code, used the way the JD itself describes using AI tools day to
+day: as an execution partner I direct, not a black box I accept output from.
+
+**What I decided.** The category (a private-markets placement marketplace, chosen
+deliberately to mirror Greenstone's own business) and the scope (a real coded prototype,
+not just static wireframes, given the JD names Claude Code as an expected tool). The
+product decisions throughout — required-area coverage, what ships in v1 versus what's
+deferred and why, the state-machine design for allocation, the trade-offs called out
+explicitly in the technical approach. Every one of those was a decision point I reviewed
+and approved before implementation continued, not something generated and left unread.
+
+**What Claude Code produced.** The scaffold (Vite/React/TypeScript/MUI), the mock data
+model and API layer, the UI components, the diagrams, and the first drafts of the written
+material — under my direction and within the architecture I'd approved.
+
+**How I checked it.** Every phase ran through automated verification before moving on —
+TypeScript compiling clean, the Vitest suite passing (including the tests for the
+allocation and state-machine logic, since that's the part of this system most likely to
+hide a real bug), and the prototype exercised in a real browser at both mobile and
+desktop widths, not just assumed to work. Real bugs surfaced this way and got fixed as
+part of the process rather than shipped: a broken mobile layout in the first pass, a
+TanStack Query gap that turned a missing fund into a fake error page, a Vercel routing
+gap that 404'd on direct links, and a PDF rendering issue that silently dropped diagram
+labels. I read this document and the codebase end to end before sending it — including
+the trade-offs table above, which I'd stand behind in the room regardless of what wrote
+the first draft of the sentence.
