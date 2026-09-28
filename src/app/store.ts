@@ -1,5 +1,6 @@
 import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { currentUser } from '../mock/data';
+import type { UserRole } from '../types/entities';
 
 // Session/UI state lives in Redux; all server data (fund vehicles, indications, orgs)
 // is owned by TanStack Query — see queryClient.ts. This split is a deliberate answer to
@@ -9,7 +10,10 @@ const sessionSlice = createSlice({
   name: 'session',
   initialState: {
     currentUser,
-    viewAs: currentUser.role as 'LP' | 'GP' | 'ADMIN' | 'COMPLIANCE',
+    // "Viewing as" is deliberately decoupled from `currentUser` — this prototype has no
+    // real multi-org auth, so switching this lens is how the demo shows GP vs LP vs
+    // Admin dashboards without building full sign-in/sign-out.
+    viewAs: currentUser.role as UserRole,
   },
   reducers: {
     setViewAs(state, action: { payload: typeof state.viewAs }) {
@@ -28,3 +32,4 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type SessionState = RootState['session'];

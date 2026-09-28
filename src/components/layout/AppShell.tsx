@@ -3,27 +3,31 @@ import {
   AppBar,
   Avatar,
   Box,
-  Chip,
   Container,
   IconButton,
   Menu,
   MenuItem,
+  Select,
   Stack,
   Toolbar,
   Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link as RouterLink } from 'react-router-dom';
-import { useAppSelector } from '../../hooks/useTypedRedux';
+import { useAppDispatch, useAppSelector } from '../../hooks/useTypedRedux';
 import { color, font } from '../../theme/tokens';
+import { setViewAs, type SessionState } from '../../app/store';
 
 const navItems = [
   { label: 'Fund Vehicles', to: '/' },
   { label: 'Dashboard', to: '/dashboard' },
 ];
 
+const viewAsOptions: SessionState['viewAs'][] = ['LP', 'GP', 'ADMIN', 'COMPLIANCE'];
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { currentUser, viewAs } = useAppSelector((s) => s.session);
+  const dispatch = useAppDispatch();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   const openMenu = (e: MouseEvent<HTMLElement>) => setMenuAnchor(e.currentTarget);
@@ -74,11 +78,27 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Stack>
           <Box sx={{ flexGrow: { xs: 1, sm: 0 } }} />
 
-          <Chip
+          <Select
             size="small"
-            label={viewAs}
-            sx={{ bgcolor: color.forest[100], color: 'primary.main', display: { xs: 'none', sm: 'inline-flex' } }}
-          />
+            value={viewAs}
+            onChange={(e) => dispatch(setViewAs(e.target.value as SessionState['viewAs']))}
+            renderValue={(value) => value}
+            aria-label="Viewing as"
+            sx={{
+              bgcolor: color.forest[100],
+              color: 'primary.main',
+              fontWeight: 600,
+              fontSize: 13,
+              '& .MuiSelect-select': { py: 0.5, px: 1.25 },
+              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+            }}
+          >
+            {viewAsOptions.map((role) => (
+              <MenuItem key={role} value={role} sx={{ fontSize: 13 }}>
+                Viewing as {role}
+              </MenuItem>
+            ))}
+          </Select>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>
               {currentUser.name.charAt(0)}

@@ -74,3 +74,45 @@ describe('submitIndication — allocation & concurrency logic', () => {
     expect(after!.committedUsd).toBe(fund!.hardCapUsd); // pinned exactly at the cap, never over
   });
 });
+
+describe('transitionIndication — state machine', () => {
+  it('rejects a transition the documented state diagram does not allow', async () => {
+    const api = await freshApi();
+    // ind-3 (seed data) is already SIGNED — SIGNED only permits ADVANCE to FUNDED.
+    await expect(api.transitionIndication('ind-3', 'WITHDRAW')).rejects.toThrow('Illegal transition');
+  });
+
+  it('walks the full allocated -> funded path via the documented edges', async () => {
+    const api = await freshApi();
+    // ind-2 (seed data) is ALLOCATED_PARTIAL.
+    const accepted = await api.transitionIndication('ind-2', 'ACCEPT_ALLOCATION');
+    expect(accepted.status).toBe('SUBSCRIPTION_SENT');
+    const verified = await api.transitionIndication('ind-2', 'ADVANCE');
+    expect(verified.status).toBe('KYC_VERIFIED');
+    const signed = await api.transitionIndication('ind-2', 'ADVANCE');
+    expect(signed.status).toBe('SIGNED');
+    const funded = await api.transitionIndication('ind-2', 'ADVANCE');
+    expect(funded.status).toBe('FUNDED');
+  });
+
+  it('declining an allocated indication releases its capacity back to the fund', async () => {
+    const api = await freshApi();
+    const fundBefore = await api.fetchFundVehicle('fv-2'); // Highfield, OVERSUBSCRIBED in seed data
+    const indicationsBefore = await api.fetchIndicationsForFundVehicle('fv-2');
+    const allocated = indicationsBefore.find((i) => i.status === 'ALLOCATED_PARTIAL')!;
+
+    // ALLOCATED_PARTIAL only permits ACCEPT_ALLOCATION or WITHDRAW (LP-initiated), not
+    // GP-initiated DECLINE — an already-allocated commitment isn't "declined", only
+    // withdrawn by the LP or advanced. This exercises that same capacity-release path.
+    const withdrawn = await api.transitionIndication(allocated.id, 'WITHDRAW');
+    expect(withdrawn.status).toBe('WITHDRAWN');
+
+    const fundAfter = await api.fetchFundVehicle('fv-2');
+    expect(fundAfter!.committedUsd).toBe(fundBefore!.committedUsd - allocated.allocatedAmountUsd!);
+    // Highfield's seed data is 940M committed against a 900M cap — releasing this LP's
+    // 22M still leaves it over cap (918M), so it correctly stays OVERSUBSCRIBED rather
+    // than flipping back to OPEN on a single withdrawal.
+    expect(fundAfter!.committedUsd).toBeGreaterThan(fundBefore!.hardCapUsd);
+    expect(fundAfter!.status).toBe('OVERSUBSCRIBED');
+  });
+});

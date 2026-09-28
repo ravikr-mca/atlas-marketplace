@@ -1,12 +1,12 @@
 import { useParams } from 'react-router-dom';
-import { Box, Chip, LinearProgress, Skeleton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Grid, LinearProgress, Skeleton, Stack, Typography } from '@mui/material';
 import { useFundVehicle, useOrganization } from './queries';
 import { formatUsdCompact, strategyLabel, fundStatusLabel } from '../../lib/format';
+import { TiptapViewer } from './components/TiptapViewer';
+import { FundPerformanceChart } from './components/FundPerformanceChart';
+import { DataRoomList } from './components/DataRoomList';
+import { IndicationOfInterestForm } from './components/IndicationOfInterestForm';
 
-// Phase 3 fills this out with the Tiptap narrative render, Recharts benchmark chart,
-// data-room PDF viewer, and the Indication-of-Interest submission form. This is the
-// Phase-1 scaffold: routing + data fetching wired, so the browse -> detail path already
-// works end to end against the mock API.
 export function FundVehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: fund, isLoading } = useFundVehicle(id ?? '');
@@ -30,7 +30,7 @@ export function FundVehicleDetailPage() {
         {strategyLabel[fund.strategy]} · Vintage {fund.vintage} · Managed by {gp?.name ?? '…'}
       </Typography>
 
-      <Box sx={{ mb: 3, maxWidth: 480 }}>
+      <Box sx={{ mb: 4, maxWidth: 480 }}>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
           <Typography variant="caption" color="text.secondary">
             {formatUsdCompact(fund.committedUsd)} committed of {formatUsdCompact(fund.hardCapUsd)} hard cap
@@ -42,7 +42,18 @@ export function FundVehicleDetailPage() {
         <LinearProgress variant="determinate" value={pctSubscribed} sx={{ height: 8, borderRadius: 4 }} />
       </Box>
 
-      <div dangerouslySetInnerHTML={{ __html: fund.narrativeHtml }} />
+      <Grid container spacing={4}>
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Stack spacing={4}>
+            <TiptapViewer html={fund.narrativeHtml} />
+            <FundPerformanceChart fund={fund} />
+            <DataRoomList fundVehicleId={fund.id} />
+          </Stack>
+        </Grid>
+        <Grid size={{ xs: 12, md: 5 }}>
+          <IndicationOfInterestForm fund={fund} />
+        </Grid>
+      </Grid>
     </Box>
   );
 }

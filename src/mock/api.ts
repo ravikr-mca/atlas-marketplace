@@ -9,7 +9,7 @@ import {
   indications,
   organizations,
 } from './data';
-import type { FundVehicle, IndicationOfInterest, Organization } from '../types/entities';
+import type { FundVehicle, IndicationOfInterest, IndicationStatus, Organization } from '../types/entities';
 
 const LATENCY_MS = 350;
 const delay = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), LATENCY_MS));
@@ -42,6 +42,18 @@ export async function fetchIndicationsForFundVehicle(fundVehicleId: string): Pro
 
 export async function fetchIndicationsForOrg(orgId: string): Promise<IndicationOfInterest[]> {
   return delay(indicationStore.filter((i) => i.lpOrganizationId === orgId));
+}
+
+export async function fetchIndicationsForGpOrg(gpOrganizationId: string): Promise<IndicationOfInterest[]> {
+  const ownFundIds = new Set(fundVehicleStore.filter((f) => f.gpOrganizationId === gpOrganizationId).map((f) => f.id));
+  return delay(indicationStore.filter((i) => ownFundIds.has(i.fundVehicleId)));
+}
+
+// Admin/Compliance oversight — every indication across every fund, for audit and
+// dispute resolution. Real RBAC would gate this endpoint to ADMIN/COMPLIANCE roles
+// server-side; the frontend gate is in DashboardPage's viewAs switch.
+export async function fetchAllIndications(): Promise<IndicationOfInterest[]> {
+  return delay(indicationStore);
 }
 
 export async function fetchDataRoomDocuments(fundVehicleId: string) {
@@ -109,4 +121,58 @@ export async function submitIndication(input: SubmitIndicationInput): Promise<In
 
 export async function fetchCurrentUser() {
   return delay(currentUser);
+}
+
+// The legal edges of the state diagram (proposal/diagrams/state-diagram.md), enforced
+// here so the UI can only ever request a transition the documented lifecycle allows —
+// an "illegal transition" is a bug in the caller, not a state the data can reach.
+export type IndicationAction = 'DECLINE' | 'WITHDRAW' | 'ACCEPT_ALLOCATION' | 'ADVANCE';
+type Action = IndicationAction;
+const transitions: Partial<Record<IndicationStatus, Partial<Record<Action, IndicationStatus>>>> = {
+  UNDER_REVIEW: { DECLINE: 'DECLINED', WITHDRAW: 'WITHDRAWN' },
+  ALLOCATED_FULL: { ACCEPT_ALLOCATION: 'SUBSCRIPTION_SENT' },
+  ALLOCATED_PARTIAL: { ACCEPT_ALLOCATION: 'SUBSCRIPTION_SENT', WITHDRAW: 'WITHDRAWN' },
+  SUBSCRIPTION_SENT: { ADVANCE: 'KYC_VERIFIED' },
+  KYC_VERIFIED: { ADVANCE: 'SIGNED' },
+  SIGNED: { ADVANCE: 'FUNDED' },
+};
+
+const RELEASES_CAPACITY: Action[] = ['DECLINE', 'WITHDRAW'];
+
+export async function transitionIndication(
+  id: string,
+  action: Action,
+  notes?: string,
+): Promise<IndicationOfInterest> {
+  await delay(null);
+
+  const current = indicationStore.find((i) => i.id === id);
+  if (!current) throw new Error('Indication not found');
+
+  const nextStatus = transitions[current.status]?.[action];
+  if (!nextStatus) {
+    throw new Error(`Illegal transition: cannot ${action} an indication in status ${current.status}`);
+  }
+
+  const now = new Date().toISOString();
+  const updated: IndicationOfInterest = { ...current, status: nextStatus, updatedAt: now, notes: notes ?? current.notes };
+  indicationStore = indicationStore.map((i) => (i.id === id ? updated : i));
+
+  // Declining or withdrawing an allocated indication frees its share of the hard cap
+  // back to the fund — an oversubscribed fund can un-oversubscribe if enough LPs walk.
+  if (RELEASES_CAPACITY.includes(action) && current.allocatedAmountUsd) {
+    fundVehicleStore = fundVehicleStore.map((f) =>
+      f.id === current.fundVehicleId
+        ? {
+            ...f,
+            committedUsd: f.committedUsd - current.allocatedAmountUsd!,
+            status: f.status === 'OVERSUBSCRIBED' && f.committedUsd - current.allocatedAmountUsd! < f.hardCapUsd
+              ? 'OPEN'
+              : f.status,
+          }
+        : f,
+    );
+  }
+
+  return updated;
 }
