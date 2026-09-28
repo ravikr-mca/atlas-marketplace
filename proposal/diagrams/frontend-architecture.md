@@ -1,5 +1,7 @@
 # Frontend Architecture
 
+Rendered, Greenstone-branded version: [`frontend-architecture.svg`](frontend-architecture.svg) (source of truth for the deck/PDF).
+
 This one *is* the prototype — the diagram matches `src/` directly, not an aspirational
 future structure.
 

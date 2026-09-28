@@ -1,5 +1,7 @@
 # Data Model — Entity Relationship Diagram
 
+Rendered, Greenstone-branded version: [`erd.svg`](erd.svg) (source of truth for the deck/PDF).
+
 Source of truth for these shapes is [`src/types/entities.ts`](../../src/types/entities.ts)
 — this diagram is generated from that file, not the other way round, so the two never
 drift apart during the build.

@@ -1,5 +1,7 @@
 # System Architecture
 
+Rendered, Greenstone-branded version: [`system-architecture.svg`](system-architecture.svg) (source of truth for the deck/PDF).
+
 Production framing — the prototype (this repo) runs the frontend half of this standalone
 against a mock API; everything right of the dashed line is the "how I'd build it for
 Greenstone" answer, not code in this repo.

@@ -1,5 +1,7 @@
 # Indication of Interest — State Diagram
 
+Rendered, Greenstone-branded version: [`state-diagram.svg`](state-diagram.svg) (source of truth for the deck/PDF).
+
 The bid → offer → purchase lifecycle, implemented in `src/types/entities.ts`
 (`IndicationStatus`) and `src/mock/api.ts` (`submitIndication`), tested in
 `src/mock/api.test.ts`.
