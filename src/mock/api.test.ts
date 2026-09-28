@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // Each test gets a fresh module instance (fresh in-memory store) since api.ts keeps
 // mutable module-level state — the fastest honest way to isolate tests without adding

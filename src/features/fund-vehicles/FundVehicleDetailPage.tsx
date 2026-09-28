@@ -20,8 +20,10 @@ export function FundVehicleDetailPage() {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-        <Typography variant="h4">{fund.name}</Typography>
+      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" rowGap={1} sx={{ mb: 1 }}>
+        <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
+          {fund.name}
+        </Typography>
         <Chip size="small" label={fundStatusLabel[fund.status]} color="primary" variant="outlined" />
       </Stack>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>

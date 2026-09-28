@@ -35,6 +35,7 @@ export interface Organization {
 
 export interface TrackRecordEntry {
   id: string;
+  gpOrganizationId: string; // prior fund raised by this GP firm — belongs on the org, not a single fund vehicle
   fundName: string;
   vintage: number;
   strategy: string;

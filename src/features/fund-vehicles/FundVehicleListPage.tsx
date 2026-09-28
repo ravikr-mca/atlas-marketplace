@@ -36,7 +36,13 @@ export function FundVehicleListPage() {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 3 }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', sm: 'baseline' }}
+        spacing={2}
+        sx={{ mb: 3 }}
+      >
         <Box>
           <Typography variant="h4" gutterBottom>
             Fund Vehicles
@@ -51,7 +57,7 @@ export function FundVehicleListPage() {
           label="Strategy"
           value={strategyFilter}
           onChange={(e) => setStrategyFilter(e.target.value as FundStrategy | 'ALL')}
-          sx={{ minWidth: 220 }}
+          sx={{ minWidth: { xs: '100%', sm: 220 } }}
         >
           <MenuItem value="ALL">All strategies</MenuItem>
           {Object.entries(strategyLabel).map(([value, label]) => (
@@ -71,7 +77,13 @@ export function FundVehicleListPage() {
             <Card key={fund.id} variant="outlined">
               <CardActionArea component={RouterLink} to={`/funds/${fund.id}`}>
                 <CardContent>
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    flexWrap="wrap"
+                    rowGap={1}
+                  >
                     <Box>
                       <Typography variant="h6">{fund.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -85,7 +97,7 @@ export function FundVehicleListPage() {
                     />
                   </Stack>
 
-                  <Stack direction="row" spacing={4} sx={{ mt: 2 }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0.5, sm: 4 }} sx={{ mt: 2 }}>
                     <Stat label="Target size" value={formatUsdCompact(fund.targetSizeUsd)} />
                     <Stat label="Minimum commitment" value={formatUsdCompact(fund.minimumCommitmentUsd)} />
                     <Stat label="Fees" value={`${fund.managementFeePct}% / ${fund.carryPct}% carry`} />
