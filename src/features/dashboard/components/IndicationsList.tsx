@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
-import { Box, Card, CardContent, Chip, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Card, CardContent, Chip, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import type { FundVehicle, IndicationOfInterest, Organization } from '../../../types/entities';
 import { formatUsd, indicationStatusLabel } from '../../../lib/format';
+import { color } from '../../../theme/tokens';
+import { Reveal } from '../../../motion/Reveal';
+import { AnimatedNumber } from '../../../motion/AnimatedNumber';
 
 const statusColor: Record<string, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   UNDER_REVIEW: 'info',
@@ -14,6 +17,20 @@ const statusColor: Record<string, 'default' | 'success' | 'warning' | 'error' | 
   KYC_VERIFIED: 'info',
   SIGNED: 'success',
   FUNDED: 'success',
+};
+
+// Same statuses, as hex — used for the mobile cards' left accent stripe, where a MUI
+// palette-key string isn't directly usable as a CSS color.
+const statusHex: Record<string, string> = {
+  UNDER_REVIEW: color.semantic.info,
+  ALLOCATED_FULL: color.semantic.success,
+  ALLOCATED_PARTIAL: color.semantic.warning,
+  DECLINED: color.semantic.danger,
+  WITHDRAWN: color.ink[500],
+  SUBSCRIPTION_SENT: color.semantic.info,
+  KYC_VERIFIED: color.semantic.info,
+  SIGNED: color.semantic.success,
+  FUNDED: color.semantic.success,
 };
 
 interface Row {
@@ -56,50 +73,60 @@ export function IndicationsList({
 
   if (indications.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Nothing here yet.
-      </Typography>
+      <Paper
+        variant="outlined"
+        sx={{ p: 4, textAlign: 'center', borderStyle: 'dashed', borderColor: color.neutral[200] }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Nothing here yet.
+        </Typography>
+      </Paper>
     );
   }
 
   if (isMobile) {
     return (
       <Stack spacing={1.5}>
-        {rows.map(({ indication, fundName: fn, orgName: on }) => (
-          <Card key={indication.id} variant="outlined">
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" rowGap={1}>
-                <Box>
-                  <Typography variant="subtitle2">{fn}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {orgColumnLabel}: {on}
-                  </Typography>
-                </Box>
-                <Chip size="small" label={indicationStatusLabel[indication.status]} color={statusColor[indication.status]} />
-              </Stack>
-              <Stack direction="row" spacing={3} sx={{ mt: 1.5 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Requested
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatUsd(indication.requestedAmountUsd)}
-                  </Typography>
-                </Box>
-                {indication.allocatedAmountUsd !== undefined && (
+        {rows.map(({ indication, fundName: fn, orgName: on }, index) => (
+          <Reveal key={indication.id} delay={index * 0.05}>
+            <Card
+              variant="outlined"
+              sx={{ borderLeft: `4px solid ${statusHex[indication.status] ?? color.neutral[200]}` }}
+            >
+              <CardContent>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" rowGap={1}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Allocated
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatUsd(indication.allocatedAmountUsd)}
+                    <Typography variant="subtitle2">{fn}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {orgColumnLabel}: {on}
                     </Typography>
                   </Box>
-                )}
-              </Stack>
-              {renderActions && <Box sx={{ mt: 1.5 }}>{renderActions(indication)}</Box>}
-            </CardContent>
-          </Card>
+                  <Chip size="small" label={indicationStatusLabel[indication.status]} color={statusColor[indication.status]} />
+                </Stack>
+                <Stack direction="row" spacing={3} sx={{ mt: 1.5 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Requested
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatUsd(indication.requestedAmountUsd)}
+                    </Typography>
+                  </Box>
+                  {indication.allocatedAmountUsd !== undefined && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Allocated
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        <AnimatedNumber value={indication.allocatedAmountUsd} format={formatUsd} />
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+                {renderActions && <Box sx={{ mt: 1.5 }}>{renderActions(indication)}</Box>}
+              </CardContent>
+            </Card>
+          </Reveal>
         ))}
       </Stack>
     );
@@ -152,16 +179,53 @@ export function IndicationsList({
   ];
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Paper variant="outlined" sx={{ width: '100%', overflow: 'hidden', borderRadius: 2 }}>
       <DataGrid
         rows={rows}
         columns={columns}
         getRowId={(row) => row.indication.id}
+        getRowClassName={(params) => `status-${params.row.indication.status}`}
         autoHeight
         density="comfortable"
         hideFooter={rows.length <= 10}
         disableRowSelectionOnClick
+        sx={{
+          border: 'none',
+          '--DataGrid-rowBorderColor': color.neutral[200],
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: color.forest[100],
+          },
+          '& .MuiDataGrid-columnHeader': {
+            '&:focus, &:focus-within': { outline: 'none' },
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 700,
+            color: color.forest[700],
+            fontSize: 13,
+            textTransform: 'uppercase',
+            letterSpacing: 0.4,
+          },
+          '& .MuiDataGrid-cell': {
+            '&:focus, &:focus-within': { outline: 'none' },
+          },
+          '& .MuiDataGrid-row': {
+            transition: 'background-color 150ms ease',
+            borderLeft: '3px solid transparent',
+          },
+          '& .MuiDataGrid-row:hover': {
+            bgcolor: color.forest[100],
+          },
+          '& .status-UNDER_REVIEW': { borderLeftColor: statusHex.UNDER_REVIEW },
+          '& .status-ALLOCATED_FULL': { borderLeftColor: statusHex.ALLOCATED_FULL },
+          '& .status-ALLOCATED_PARTIAL': { borderLeftColor: statusHex.ALLOCATED_PARTIAL },
+          '& .status-DECLINED': { borderLeftColor: statusHex.DECLINED },
+          '& .status-WITHDRAWN': { borderLeftColor: statusHex.WITHDRAWN },
+          '& .status-SUBSCRIPTION_SENT': { borderLeftColor: statusHex.SUBSCRIPTION_SENT },
+          '& .status-KYC_VERIFIED': { borderLeftColor: statusHex.KYC_VERIFIED },
+          '& .status-SIGNED': { borderLeftColor: statusHex.SIGNED },
+          '& .status-FUNDED': { borderLeftColor: statusHex.FUNDED },
+        } as const}
       />
-    </Box>
+    </Paper>
   );
 }
