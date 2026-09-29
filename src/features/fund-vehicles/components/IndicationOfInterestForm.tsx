@@ -14,6 +14,7 @@ import { useSubmitIndication } from '../queries';
 import { formatUsd, indicationStatusLabel } from '../../../lib/format';
 import { useAppSelector } from '../../../hooks/useTypedRedux';
 import type { FundVehicle } from '../../../types/entities';
+import { color } from '../../../theme/tokens';
 
 // A demo LP org standing in for "whichever org the signed-in user represents" — this
 // prototype has no real multi-tenant auth (see proposal for the Entra ID production
@@ -60,7 +61,17 @@ export function IndicationOfInterestForm({ fund }: { fund: FundVehicle }) {
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2.5 }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 2.5,
+        borderTop: `3px solid ${color.sky[600]}`,
+        // The sky accent marks this as an LP-initiated action surface, distinct from the
+        // green used for GP/platform actions elsewhere — a semantic use of the new
+        // secondary color, not decoration for its own sake.
+        background: `linear-gradient(180deg, ${color.sky[100]}80 0%, transparent 140px)`,
+      }}
+    >
       <Typography variant="subtitle1" fontWeight={600} gutterBottom>
         Submit an indication of interest
       </Typography>
@@ -84,6 +95,7 @@ export function IndicationOfInterestForm({ fund }: { fund: FundVehicle }) {
         />
         <Button
           variant="contained"
+          color="secondary"
           onClick={handleSubmit}
           disabled={belowMinimum || closed || submit.isPending}
           sx={{ height: 40 }}

@@ -17,6 +17,8 @@ import { useFundVehicles, useIndicationsForGpOrg, useOrganizations, useTransitio
 import { IndicationsList } from './IndicationsList';
 import { formatUsdCompact } from '../../../lib/format';
 import type { IndicationOfInterest } from '../../../types/entities';
+import { Reveal } from '../../../motion/Reveal';
+import { AnimatedNumber } from '../../../motion/AnimatedNumber';
 
 const GP_ORG_ID = 'org-gp-1'; // demo GP org — see IndicationOfInterestForm for the equivalent LP-side note
 
@@ -44,25 +46,28 @@ export function GpDashboard() {
           Your fund vehicles
         </Typography>
         <Stack spacing={1.5}>
-          {ownFunds.map((fund) => {
+          {ownFunds.map((fund, index) => {
             const pct = Math.min(100, Math.round((fund.committedUsd / fund.hardCapUsd) * 100));
             return (
-              <Card key={fund.id} variant="outlined">
-                <CardContent>
-                  <Stack direction="row" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
-                    <Typography variant="subtitle1">{fund.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatUsdCompact(fund.committedUsd)} / {formatUsdCompact(fund.hardCapUsd)} ({pct}%)
-                    </Typography>
-                  </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={pct}
-                    color={pct >= 100 ? 'warning' : 'primary'}
-                    sx={{ mt: 1, height: 6, borderRadius: 3 }}
-                  />
-                </CardContent>
-              </Card>
+              <Reveal key={fund.id} delay={index * 0.06}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Stack direction="row" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
+                      <Typography variant="subtitle1">{fund.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <AnimatedNumber value={fund.committedUsd} format={formatUsdCompact} /> /{' '}
+                        {formatUsdCompact(fund.hardCapUsd)} (<AnimatedNumber value={pct} format={(n) => `${Math.round(n)}%`} />)
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      value={pct}
+                      color={pct >= 100 ? 'warning' : 'primary'}
+                      sx={{ mt: 1, height: 6, borderRadius: 3 }}
+                    />
+                  </CardContent>
+                </Card>
+              </Reveal>
             );
           })}
         </Stack>

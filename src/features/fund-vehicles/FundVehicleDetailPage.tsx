@@ -6,6 +6,8 @@ import { TiptapViewer } from './components/TiptapViewer';
 import { FundPerformanceChart } from './components/FundPerformanceChart';
 import { DataRoomList } from './components/DataRoomList';
 import { IndicationOfInterestForm } from './components/IndicationOfInterestForm';
+import { Reveal } from '../../motion/Reveal';
+import { AnimatedNumber } from '../../motion/AnimatedNumber';
 
 export function FundVehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,23 +38,26 @@ export function FundVehicleDetailPage() {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" rowGap={1} sx={{ mb: 1 }}>
-        <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
-          {fund.name}
+      <Box sx={{ mb: 1 }}>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" rowGap={1}>
+          <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
+            {fund.name}
+          </Typography>
+          <Chip size="small" label={fundStatusLabel[fund.status]} color="primary" variant="outlined" />
+        </Stack>
+        <Typography variant="body1" color="text.secondary">
+          {strategyLabel[fund.strategy]} · Vintage {fund.vintage} · Managed by {gp?.name ?? '…'}
         </Typography>
-        <Chip size="small" label={fundStatusLabel[fund.status]} color="primary" variant="outlined" />
-      </Stack>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        {strategyLabel[fund.strategy]} · Vintage {fund.vintage} · Managed by {gp?.name ?? '…'}
-      </Typography>
+      </Box>
 
       <Box sx={{ mb: 4, maxWidth: 480 }}>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
           <Typography variant="caption" color="text.secondary">
-            {formatUsdCompact(fund.committedUsd)} committed of {formatUsdCompact(fund.hardCapUsd)} hard cap
+            <AnimatedNumber value={fund.committedUsd} format={formatUsdCompact} /> committed of{' '}
+            {formatUsdCompact(fund.hardCapUsd)} hard cap
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {pctSubscribed}%
+            <AnimatedNumber value={pctSubscribed} format={(n) => `${Math.round(n)}%`} />
           </Typography>
         </Stack>
         <LinearProgress variant="determinate" value={pctSubscribed} sx={{ height: 8, borderRadius: 4 }} />
@@ -61,13 +66,21 @@ export function FundVehicleDetailPage() {
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={4}>
-            <TiptapViewer html={fund.narrativeHtml} />
-            <FundPerformanceChart fund={fund} />
-            <DataRoomList fundVehicleId={fund.id} />
+            <Reveal>
+              <TiptapViewer html={fund.narrativeHtml} />
+            </Reveal>
+            <Reveal delay={0.08}>
+              <FundPerformanceChart fund={fund} />
+            </Reveal>
+            <Reveal delay={0.16}>
+              <DataRoomList fundVehicleId={fund.id} />
+            </Reveal>
           </Stack>
         </Grid>
         <Grid size={{ xs: 12, md: 5 }}>
-          <IndicationOfInterestForm fund={fund} />
+          <Reveal direction="left" delay={0.1}>
+            <IndicationOfInterestForm fund={fund} />
+          </Reveal>
         </Grid>
       </Grid>
     </Box>

@@ -10,8 +10,10 @@ export const theme = createTheme({
       contrastText: color.neutral[0],
     },
     secondary: {
-      main: color.neutral.charcoal,
-      contrastText: color.neutral.onCharcoal,
+      main: color.sky[600],
+      light: color.sky[200],
+      dark: color.sky[700],
+      contrastText: color.neutral[0],
     },
     success: { main: color.semantic.success },
     warning: { main: color.semantic.warning },
@@ -42,7 +44,27 @@ export const theme = createTheme({
   components: {
     MuiButton: {
       styleOverrides: {
-        root: { borderRadius: radius.sm },
+        root: {
+          borderRadius: radius.sm,
+          transition: 'transform 150ms ease, box-shadow 150ms ease, filter 150ms ease',
+          '&:active': { transform: 'scale(0.97)' },
+        },
+        containedPrimary: {
+          backgroundImage: `linear-gradient(155deg, ${color.forest[500]} 0%, ${color.forest[700]} 65%)`,
+          boxShadow: `0 2px 8px 0 ${color.forest[900]}33`,
+          '&:hover': {
+            backgroundImage: `linear-gradient(155deg, ${color.forest[500]} 0%, ${color.forest[900]} 65%)`,
+            boxShadow: `0 4px 14px 0 ${color.forest[900]}4D`,
+          },
+        },
+        containedSecondary: {
+          backgroundImage: `linear-gradient(155deg, ${color.sky[600]} 0%, ${color.sky[700]} 65%)`,
+          boxShadow: `0 2px 8px 0 ${color.sky[700]}33`,
+          '&:hover': {
+            backgroundImage: `linear-gradient(155deg, ${color.sky[600]} 0%, #022873 65%)`,
+            boxShadow: `0 4px 14px 0 ${color.sky[700]}4D`,
+          },
+        },
       },
     },
     MuiPaper: {
@@ -50,9 +72,38 @@ export const theme = createTheme({
         root: { backgroundImage: 'none' },
       },
     },
+    MuiCard: {
+      defaultProps: { variant: 'outlined' },
+      styleOverrides: {
+        root: {
+          transition: 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, border-color 200ms ease',
+          // :has() lifts the CardActionArea child's hover into the parent Card's own
+          // shadow/border, so a card "lifts" as one piece instead of just its ripple layer.
+          '&:has(.MuiCardActionArea-root:hover)': {
+            transform: 'translateY(-3px)',
+            boxShadow: `0 12px 24px -8px ${color.ink[900]}26`,
+            borderColor: color.forest[500],
+          },
+        },
+      },
+    },
+    MuiCardActionArea: {
+      styleOverrides: {
+        root: {
+          transition: 'transform 200ms ease',
+          '& .MuiTouchRipple-root': { color: color.forest[100] },
+        },
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: { borderRadius: radius.sm },
+      },
+    },
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: { transition: 'opacity 300ms ease' },
+        bar: { transition: 'transform 900ms cubic-bezier(0.22, 1, 0.36, 1)' },
       },
     },
     MuiAppBar: {
@@ -62,6 +113,7 @@ export const theme = createTheme({
           color: color.ink[900],
           boxShadow: 'none',
           borderBottom: `1px solid ${color.neutral[200]}`,
+          transition: 'box-shadow 200ms ease, border-color 200ms ease',
         },
       },
     },
