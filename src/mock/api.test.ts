@@ -109,10 +109,11 @@ describe('transitionIndication — state machine', () => {
 
     const fundAfter = await api.fetchFundVehicle('fv-2');
     expect(fundAfter!.committedUsd).toBe(fundBefore!.committedUsd - allocated.allocatedAmountUsd!);
-    // Highfield's seed data is 940M committed against a 900M cap — releasing this LP's
-    // 22M still leaves it over cap (918M), so it correctly stays OVERSUBSCRIBED rather
-    // than flipping back to OPEN on a single withdrawal.
-    expect(fundAfter!.committedUsd).toBeGreaterThan(fundBefore!.hardCapUsd);
-    expect(fundAfter!.status).toBe('OVERSUBSCRIBED');
+    // Highfield's seed is pinned exactly at its 900M hard cap (the API can never push a
+    // fund past it). Releasing this LP's 22M drops it below the cap, so the fund leaves
+    // OVERSUBSCRIBED and reopens — this is the revert branch that was previously untested.
+    expect(fundBefore!.committedUsd).toBe(fundBefore!.hardCapUsd);
+    expect(fundAfter!.committedUsd).toBeLessThan(fundBefore!.hardCapUsd);
+    expect(fundAfter!.status).toBe('OPEN');
   });
 });
