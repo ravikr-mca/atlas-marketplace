@@ -13,6 +13,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@hookform/resolvers": "^5.9.1",
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "@mui/x-data-grid": "^7.29.13",
@@ -26,9 +27,11 @@
     "framer-motion": "^13.4.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-hook-form": "^7.89.0",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.4",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@fontsource/geist-sans": "^5.3.0",
