@@ -1,11 +1,11 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useFundVehicles, useIndicationsForOrg, useOrganizations, useTransitionIndication } from '../../fund-vehicles/queries';
+import { useSession } from '../../../auth/useSession';
 import { IndicationsList } from './IndicationsList';
 
-const LP_ORG_ID = 'org-lp-1'; // matches IndicationOfInterestForm's demo LP org
-
 export function LpDashboard() {
+  const LP_ORG_ID = useSession().organization!.id;
   const { data: funds } = useFundVehicles();
   const { data: organizations } = useOrganizations();
   const { data: indications } = useIndicationsForOrg(LP_ORG_ID);

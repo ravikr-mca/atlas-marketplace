@@ -12,30 +12,30 @@ import {
 } from '@mui/material';
 import { useSubmitIndication } from '../queries';
 import { formatUsd, indicationStatusLabel } from '../../../lib/format';
-import { useAppSelector } from '../../../hooks/useTypedRedux';
+import { useSession } from '../../../auth/useSession';
+import { fundAcceptsIndications } from '../../../domain/fundRules';
+import { isApiError } from '../../../mock/errors';
 import type { FundVehicle } from '../../../types/entities';
 import { color } from '../../../theme/tokens';
 
-// A demo LP org standing in for "whichever org the signed-in user represents" — this
-// prototype has no real multi-tenant auth (see proposal for the Entra ID production
-// plan), so submissions are attributed to a fixed sample investor org.
-const DEMO_LP_ORG_ID = 'org-lp-1';
-
 export function IndicationOfInterestForm({ fund }: { fund: FundVehicle }) {
-  const { viewAs } = useAppSelector((s) => s.session);
+  const { user, decide } = useSession();
   const [amount, setAmount] = useState(fund.minimumCommitmentUsd);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'warning' | 'error' } | null>(null);
   const submit = useSubmitIndication(fund.id);
 
   const belowMinimum = amount < fund.minimumCommitmentUsd;
-  const closed = fund.status === 'CLOSED' || fund.status === 'WITHDRAWN';
+  const acceptance = fundAcceptsIndications(fund);
+  const closed = !acceptance.ok;
+  const permission = decide('ioi:submit');
 
-  if (viewAs !== 'LP') {
+  // The same rule table the API enforces — here it explains instead of refusing.
+  if (!permission.allowed) {
     return (
       <Paper variant="outlined" sx={{ p: 2.5 }}>
+        <Typography variant="subtitle1" fontWeight={600} gutterBottom>Submit an indication of interest</Typography>
         <Typography variant="body2" color="text.secondary">
-          Switch "Viewing as" to <strong>LP</strong> in the header to submit an indication
-          of interest for this fund.
+          {user?.role === 'LP' ? permission.reason : 'Only accredited investor accounts can submit indications of interest.'}
         </Typography>
       </Paper>
     );
@@ -46,17 +46,16 @@ export function IndicationOfInterestForm({ fund }: { fund: FundVehicle }) {
       const result = await submit.mutateAsync({
         // A fresh key per attempt is correct here — this is a new user action, not a
         // retry of a dropped request (which would reuse the same key; see api.ts).
-        idempotencyKey: `${fund.id}-${DEMO_LP_ORG_ID}-${Date.now()}`,
+        idempotencyKey: `${fund.id}-${user!.id}-${Date.now()}`,
         fundVehicleId: fund.id,
-        lpOrganizationId: DEMO_LP_ORG_ID,
         requestedAmountUsd: amount,
       });
       setSnackbar({
         message: `${indicationStatusLabel[result.status]} — ${formatUsd(result.allocatedAmountUsd ?? 0)} allocated of ${formatUsd(amount)} requested.`,
         severity: result.status === 'ALLOCATED_FULL' ? 'success' : 'warning',
       });
-    } catch {
-      setSnackbar({ message: 'Submission failed — please try again.', severity: 'error' });
+    } catch (e) {
+      setSnackbar({ message: isApiError(e) ? e.message : 'Submission failed — please try again.', severity: 'error' });
     }
   };
 
@@ -105,7 +104,7 @@ export function IndicationOfInterestForm({ fund }: { fund: FundVehicle }) {
       </Stack>
 
       {closed && (
-        <Chip size="small" label="This fund is no longer accepting indications" sx={{ mt: 2 }} />
+        <Chip size="small" label={acceptance.ok ? '' : acceptance.message} sx={{ mt: 2, height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }} />
       )}
 
       <Snackbar open={!!snackbar} autoHideDuration={6000} onClose={() => setSnackbar(null)}>

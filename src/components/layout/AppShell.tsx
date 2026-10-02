@@ -7,7 +7,9 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  Select,
+  Button,
+  Chip,
+  Divider,
   Stack,
   Toolbar,
   Typography,
@@ -16,9 +18,11 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAppDispatch, useAppSelector } from '../../hooks/useTypedRedux';
+import { useSession } from '../../auth/useSession';
+import { useAuthActions, DEMO_MODE } from '../../auth/useAuthActions';
+import { ROLE_LABEL } from '../../auth/permissions';
+import { resetDb } from '../../mock/db';
 import { color, font } from '../../theme/tokens';
-import { setViewAs, type SessionState } from '../../app/store';
 import { AtlasLogo } from '../AtlasLogo';
 import { ChartPatternBackground } from '../ChartPatternBackground';
 
@@ -27,11 +31,10 @@ const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
 ];
 
-const viewAsOptions: SessionState['viewAs'][] = ['LP', 'GP', 'ADMIN', 'COMPLIANCE'];
-
 export function AppShell({ children }: { children: ReactNode }) {
-  const { currentUser, viewAs } = useAppSelector((s) => s.session);
-  const dispatch = useAppDispatch();
+  const { user, organization } = useSession();
+  const { endSession } = useAuthActions();
+  const [userAnchor, setUserAnchor] = useState<HTMLElement | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const location = useLocation();
 
@@ -141,44 +144,34 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Stack>
           <Box sx={{ flexGrow: { xs: 1, sm: 0 } }} />
 
-          <Select
-            size="small"
-            value={viewAs}
-            onChange={(e) => dispatch(setViewAs(e.target.value as SessionState['viewAs']))}
-            renderValue={(value) => value}
-            aria-label="Viewing as"
-            sx={{
-              bgcolor: color.forest[100],
-              color: 'primary.main',
-              fontWeight: 600,
-              fontSize: 13,
-              transition: 'background-color 150ms ease, box-shadow 150ms ease',
-              '&:hover': { bgcolor: color.forest[100], boxShadow: `0 0 0 2px ${color.forest[500]}66` },
-              '& .MuiSelect-select': { py: 0.5, px: 1.25 },
-              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-            }}
+          <Button
+            onClick={(e) => setUserAnchor(e.currentTarget)}
+            aria-label={`Account menu for ${user?.name ?? ''}`}
+            aria-haspopup="menu"
+            color="inherit"
+            sx={{ textTransform: 'none', gap: 1, px: 1, minWidth: 0 }}
           >
-            {viewAsOptions.map((role) => (
-              <MenuItem key={role} value={role} sx={{ fontSize: 13 }}>
-                Viewing as {role}
-              </MenuItem>
-            ))}
-          </Select>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Box
-              component={motion.div}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-            >
-              <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13, cursor: 'pointer' }}>
-                {currentUser.name.charAt(0)}
-              </Avatar>
+            <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>{user?.name.charAt(0)}</Avatar>
+            <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' } }} noWrap>{user?.name}</Typography>
+          </Button>
+          <Menu anchorEl={userAnchor} open={!!userAnchor} onClose={() => setUserAnchor(null)} slotProps={{ paper: { sx: { minWidth: 260 } } }}>
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography fontWeight={600}>{user?.name}</Typography>
+              <Typography variant="body2" color="text.secondary">{user && ROLE_LABEL[user.role]} · {organization?.name}</Typography>
+              {organization && user?.role !== 'ADMIN' && user?.role !== 'COMPLIANCE' && (
+                <Chip size="small" sx={{ mt: 1 }} color={organization.accreditation === 'VERIFIED' ? 'success' : 'warning'}
+                  label={organization.accreditation === 'VERIFIED' ? 'Accredited' : organization.accreditation === 'PENDING' ? 'Accreditation pending' : 'Not yet accredited'} />
+              )}
             </Box>
-            <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' } }} noWrap>
-              {currentUser.name}
-            </Typography>
-          </Stack>
+            <Divider />
+            {DEMO_MODE && (
+              <MenuItem onClick={async () => { setUserAnchor(null); await endSession(); }}>Switch persona</MenuItem>
+            )}
+            {DEMO_MODE && (
+              <MenuItem onClick={() => { resetDb(); window.location.assign('/login'); }}>Reset demo data</MenuItem>
+            )}
+            <MenuItem onClick={async () => { setUserAnchor(null); await endSession(); }}>Sign out</MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 3 }, position: 'relative', zIndex: 1 }}>

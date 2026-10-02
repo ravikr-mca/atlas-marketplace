@@ -14,15 +14,15 @@ import {
   Typography,
 } from '@mui/material';
 import { useFundVehicles, useIndicationsForGpOrg, useOrganizations, useTransitionIndication } from '../../fund-vehicles/queries';
+import { useSession } from '../../../auth/useSession';
 import { IndicationsList } from './IndicationsList';
 import { formatUsdCompact } from '../../../lib/format';
 import type { IndicationOfInterest } from '../../../types/entities';
 import { Reveal } from '../../../motion/Reveal';
 import { AnimatedNumber } from '../../../motion/AnimatedNumber';
 
-const GP_ORG_ID = 'org-gp-1'; // demo GP org — see IndicationOfInterestForm for the equivalent LP-side note
-
 export function GpDashboard() {
+  const GP_ORG_ID = useSession().organization!.id;
   const { data: allFunds } = useFundVehicles();
   const { data: organizations } = useOrganizations();
   const { data: indications } = useIndicationsForGpOrg(GP_ORG_ID);
