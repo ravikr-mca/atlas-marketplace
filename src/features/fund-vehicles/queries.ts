@@ -9,6 +9,10 @@ import {
   fetchIndicationsForOrg,
   fetchOrganization,
   fetchOrganizations,
+  fetchTrackRecords,
+  fetchApprovalQueue,
+  reviewOrganization,
+  type ReviewDecision,
   submitIndication,
   transitionIndication,
   type IndicationAction,
@@ -107,5 +111,22 @@ export function useTransitionIndication() {
     mutationFn: ({ id, action, notes }: { id: string; action: IndicationAction; notes?: string }) =>
       transitionIndication(id, action, notes),
     onSuccess: () => invalidateIndicationEffects(queryClient),
+  });
+}
+
+export function useTrackRecords(orgId: string | undefined) {
+  return useQuery({ queryKey: ['organizations', orgId, 'track-record'], queryFn: () => fetchTrackRecords(orgId as string), enabled: !!orgId });
+}
+
+export function useApprovalQueue() {
+  return useQuery({ queryKey: ['approvals'], queryFn: fetchApprovalQueue });
+}
+
+export function useReviewOrganization() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { organizationId: string; decision: ReviewDecision; reason?: string }) => reviewOrganization(input),
+    // Accreditation drives permissions everywhere, so refresh everything that depends on it.
+    onSuccess: () => queryClient.invalidateQueries(),
   });
 }

@@ -129,3 +129,40 @@ describe('authorization (enforced in the API, not just the UI)', () => {
     expect(await code(api.submitIndication({ idempotencyKey: 'e', fundVehicleId: 'fv-3', requestedAmountUsd: 2_000_000 }))).toBe('DUPLICATE_ACTIVE');
   });
 });
+
+describe('accreditation review', () => {
+  it('only Admin can review; approving unlocks the investor immediately and notifies them', async () => {
+    await as('user-compliance-1');
+    expect(await code(api.reviewOrganization({ organizationId: 'org-lp-6', decision: 'APPROVE' }))).toBe('FORBIDDEN');
+
+    await as('user-lp-6');
+    const submit = () => api.submitIndication({ idempotencyKey: `k-${Math.random()}`, fundVehicleId: 'fv-3', requestedAmountUsd: 2_000_000 });
+    expect(await code(submit())).toBe('NOT_ACCREDITED');
+
+    await as('user-admin-1');
+    const approved = await api.reviewOrganization({ organizationId: 'org-lp-6', decision: 'APPROVE' });
+    expect(approved.accreditation).toBe('VERIFIED');
+    expect(approved.verifiedByUserId).toBe('user-admin-1');
+
+    await as('user-lp-6');
+    expect(await code(submit())).toBe('OK'); // same session, new permissions
+    expect(api.db.notifications.some((n) => n.userId === 'user-lp-6' && n.kind === 'ACCREDITATION' && n.body.includes('now accredited'))).toBe(true);
+    expect(api.db.audit.some((a) => a.entityId === 'org-lp-6' && a.action === 'ACCREDITATION_VERIFIED' && a.actorUserId === 'user-admin-1')).toBe(true);
+  });
+
+  it('rejecting needs a reason, keeps the org blocked, and can’t be repeated', async () => {
+    await as('user-admin-1');
+    expect(await code(api.reviewOrganization({ organizationId: 'org-lp-6', decision: 'REJECT' }))).toBe('VALIDATION');
+    const rejected = await api.reviewOrganization({ organizationId: 'org-lp-6', decision: 'REJECT', reason: 'Proof of funds is missing.' });
+    expect(rejected.accreditation).toBe('UNVERIFIED');
+    expect(rejected.rejectionReason).toBe('Proof of funds is missing.');
+    expect(await code(api.reviewOrganization({ organizationId: 'org-lp-6', decision: 'APPROVE' }))).toBe('ILLEGAL_TRANSITION');
+  });
+
+  it('the approval queue is Admin-only', async () => {
+    await as('user-lp-1');
+    expect(await code(api.fetchApprovalQueue())).toBe('FORBIDDEN');
+    await as('user-admin-1');
+    expect((await api.fetchApprovalQueue()).every((o) => o.accreditation !== 'VERIFIED')).toBe(true);
+  });
+});

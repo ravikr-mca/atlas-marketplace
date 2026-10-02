@@ -1,11 +1,12 @@
 import { Link as RouterLink, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Chip, Grid, LinearProgress, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Chip, Grid, LinearProgress, Link, Skeleton, Stack, Typography } from '@mui/material';
 import { useFundVehicle, useOrganization } from './queries';
 import { formatUsdCompact, strategyLabel, fundStatusLabel } from '../../lib/format';
 import { TiptapViewer } from './components/TiptapViewer';
 import { FundPerformanceChart } from './components/FundPerformanceChart';
 import { DataRoomList } from './components/DataRoomList';
 import { IndicationOfInterestForm } from './components/IndicationOfInterestForm';
+import { VerificationBadge } from '../../components/VerificationBadge';
 import { Reveal } from '../../motion/Reveal';
 import { AnimatedNumber } from '../../motion/AnimatedNumber';
 
@@ -46,8 +47,10 @@ export function FundVehicleDetailPage() {
           <Chip size="small" label={fundStatusLabel[fund.status]} color="primary" variant="outlined" />
         </Stack>
         <Typography variant="body1" color="text.secondary">
-          {strategyLabel[fund.strategy]} · Vintage {fund.vintage} · Managed by {gp?.name ?? '…'}
+          {strategyLabel[fund.strategy]} · Vintage {fund.vintage} · Managed by{' '}
+          {gp ? <Link component={RouterLink} to={`/orgs/${gp.id}`}>{gp.name}</Link> : '…'}
         </Typography>
+        {gp && <Box sx={{ mt: 1 }}><VerificationBadge organization={gp} /></Box>}
       </Box>
 
       <Box sx={{ mb: 4, maxWidth: 480 }}>

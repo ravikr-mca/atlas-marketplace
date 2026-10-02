@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Box, Card, CardContent, Chip, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { Box, Card, CardContent, Chip, Link, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import type { FundVehicle, IndicationOfInterest, Organization } from '../../../types/entities';
 import { formatUsd, indicationStatusLabel } from '../../../lib/format';
@@ -37,6 +38,7 @@ interface Row {
   indication: IndicationOfInterest;
   fundName: string;
   orgName: string;
+  orgId?: string;
 }
 
 export function IndicationsList({
@@ -65,11 +67,10 @@ export function IndicationsList({
   const fundName = (id: string) => funds.find((f) => f.id === id)?.name ?? id;
   const orgName = (id: string | undefined) => (id && organizations.find((o) => o.id === id)?.name) ?? '—';
 
-  const rows: Row[] = indications.map((indication) => ({
-    indication,
-    fundName: fundName(indication.fundVehicleId),
-    orgName: orgName((resolveOrgId ?? ((i) => i.lpOrganizationId))(indication)),
-  }));
+  const rows: Row[] = indications.map((indication) => {
+    const orgId = (resolveOrgId ?? ((i) => i.lpOrganizationId))(indication);
+    return { indication, fundName: fundName(indication.fundVehicleId), orgName: orgName(orgId), orgId };
+  });
 
   if (indications.length === 0) {
     return (
@@ -87,7 +88,7 @@ export function IndicationsList({
   if (isMobile) {
     return (
       <Stack spacing={1.5}>
-        {rows.map(({ indication, fundName: fn, orgName: on }, index) => (
+        {rows.map(({ indication, fundName: fn, orgName: on, orgId }, index) => (
           <Reveal key={indication.id} delay={index * 0.05}>
             <Card
               variant="outlined"
@@ -98,7 +99,8 @@ export function IndicationsList({
                   <Box>
                     <Typography variant="subtitle2">{fn}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {orgColumnLabel}: {on}
+                      {orgColumnLabel}:{' '}
+                      {orgId ? <Link component={RouterLink} to={`/orgs/${orgId}`}>{on}</Link> : on}
                     </Typography>
                   </Box>
                   <Chip size="small" label={indicationStatusLabel[indication.status]} color={statusColor[indication.status]} />
@@ -134,7 +136,10 @@ export function IndicationsList({
 
   const columns: GridColDef<Row>[] = [
     { field: 'fundName', headerName: 'Fund', flex: 1.2, minWidth: 160 },
-    { field: 'orgName', headerName: orgColumnLabel, flex: 1, minWidth: 160 },
+    {
+      field: 'orgName', headerName: orgColumnLabel, flex: 1, minWidth: 160,
+      renderCell: ({ row }) => (row.orgId ? <Link component={RouterLink} to={`/orgs/${row.orgId}`}>{row.orgName}</Link> : row.orgName),
+    },
     {
       field: 'requested',
       headerName: 'Requested',

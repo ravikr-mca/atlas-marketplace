@@ -6,7 +6,9 @@ import { FundVehicleDetailPage } from './features/fund-vehicles/FundVehicleDetai
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { NotFoundPage } from './features/auth/ForbiddenPage';
-import { RequireAuth } from './auth/guards';
+import { OrgProfilePage } from './features/orgs/OrgProfilePage';
+import { ApprovalsPage } from './features/admin/ApprovalsPage';
+import { RequireAuth, RequirePermission } from './auth/guards';
 import { usePrefersReducedMotion } from './motion/usePrefersReducedMotion';
 
 function Shell() {
@@ -38,6 +40,10 @@ export function App() {
           <Route path="/" element={<FundVehicleListPage />} />
           <Route path="/funds/:id" element={<FundVehicleDetailPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/orgs/:id" element={<OrgProfilePage />} />
+          <Route element={<RequirePermission permission="org:verify" />}>
+            <Route path="/admin/approvals" element={<ApprovalsPage />} />
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>

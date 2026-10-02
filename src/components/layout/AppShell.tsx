@@ -26,13 +26,15 @@ import { color, font } from '../../theme/tokens';
 import { AtlasLogo } from '../AtlasLogo';
 import { ChartPatternBackground } from '../ChartPatternBackground';
 
-const navItems = [
+const NAV = [
   { label: 'Fund Vehicles', to: '/' },
   { label: 'Dashboard', to: '/dashboard' },
+  { label: 'Approvals', to: '/admin/approvals', permission: 'org:verify' as const },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, organization } = useSession();
+  const { user, organization, can } = useSession();
+  const navItems = NAV.filter((n) => !n.permission || can(n.permission));
   const { endSession } = useAuthActions();
   const [userAnchor, setUserAnchor] = useState<HTMLElement | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -164,6 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             </Box>
             <Divider />
+            <MenuItem component={RouterLink} to={`/orgs/${organization?.id}`} onClick={() => setUserAnchor(null)}>My organization</MenuItem>
             {DEMO_MODE && (
               <MenuItem onClick={async () => { setUserAnchor(null); await endSession(); }}>Switch persona</MenuItem>
             )}
