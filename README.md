@@ -24,11 +24,22 @@ npm run test     # Vitest — state-machine / allocation logic
 npm run build    # typecheck + production build
 ```
 
+## Signing in (demo)
+
+The login page offers one-click demo personas (investors, managers, Greenstone staff via a
+mock Entra ID chooser). Credentials are mock and **DEMO ONLY**: persona e-mails use the
+reserved `.test` domain and share one published demo password shown on the login screen.
+Try *Omar Al Farsi* (verified investor), *Faisal Al Otaibi* (accreditation pending — every
+blocked action explains why), *Elena Marsh* (verified manager), and *Layla Haddad* (admin,
+approves organizations). "Reset demo data" in the account menu restores the seed.
+
 ## Project layout
 
 - `src/theme/` — design tokens + MUI theme (see `DESIGN.md` for sourcing/contrast notes)
 - `src/types/entities.ts` — core domain model (users, orgs, fund vehicles, indications…)
-- `src/mock/` — mock data + a small fake API layer (server-authoritative allocation logic
-  lives in `api.ts`, tested in `api.test.ts`)
+- `src/mock/` — seed data (`seed/`), mock auth server (`auth.ts`) and a permission-checked fake API
+  (`api/`); allocation logic tested in `api.test.ts`, authorization in `authz.test.ts`
+- `src/auth/` — the single permissions table used by both the UI and the API
+- `src/domain/` — indication state machine and fund rules
 - `src/features/` — routed feature areas (fund vehicles, dashboard)
 - `proposal/` — source material for the written proposal, deck, and diagrams
