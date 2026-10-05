@@ -11,6 +11,8 @@ how they were rasterized) — this script only lays out the document, it doesn't
 the diagrams themselves.
 """
 
+import re
+import sys
 import markdown
 from pathlib import Path
 from weasyprint import HTML
@@ -19,7 +21,30 @@ ROOT = Path(__file__).resolve().parent.parent
 PROPOSAL_DIR = ROOT / "proposal"
 FONT_DIR = ROOT / "node_modules" / "@fontsource"
 
-md_text = (PROPOSAL_DIR / "proposal.md").read_text(encoding="utf-8")
+# Optional: build_pdf.py [source.md] [output.pdf] — defaults build the proposal.
+SOURCE = sys.argv[1] if len(sys.argv) > 1 else "proposal.md"
+OUTPUT = sys.argv[2] if len(sys.argv) > 2 else "Atlas Marketplace - Proposal.pdf"
+
+md_text = (PROPOSAL_DIR / SOURCE).read_text(encoding="utf-8")
+
+if SOURCE != "proposal.md":
+    # Links to sibling .md files are dead inside a PDF: keep the text, drop the link.
+    md_text = re.sub(r"\[([^\]]+)\]\((?!http)[^)]*\.md\)", r"\1", md_text)
+    md_text = re.sub(r"\[`?(diagrams/)`?\]\(diagrams/\)", r"`diagrams/`", md_text)
+    for name, phrase in {
+        "diagrams/frontend-architecture.md": "the frontend architecture diagram (see appendix)",
+        "diagrams/system-architecture.md": "the system architecture diagram (see appendix)",
+        "diagrams/state-diagram.md": "the state diagram (see appendix)",
+        "diagrams/erd.md": "the data-model diagram (see appendix)",
+        "concept.md": "the concept document",
+        "DESIGN.md": "the design-system notes in the repository",
+    }.items():
+        md_text = md_text.replace(f"`{name}`", phrase).replace(name, phrase)
+    md_text += "\n\n## Appendix: diagrams\n\n" + "\n\n".join(
+        f'**{t}**\n\n<img class="diagram" src="diagrams/{n}.png" alt="{t}">'
+        for t, n in [("System architecture", "system-architecture"), ("Frontend architecture", "frontend-architecture"),
+                     ("Data model (ERD)", "erd"), ("Indication state diagram", "state-diagram")]
+    )
 
 # Replace diagram references with embedded <img> tags, sized to fit the page width.
 diagram_refs = {
@@ -169,5 +194,5 @@ html_doc = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>{css}</style></head>
 <body>{body_html}</body></html>"""
 
-HTML(string=html_doc, base_url=str(PROPOSAL_DIR)).write_pdf(str(PROPOSAL_DIR / "Atlas Marketplace - Proposal.pdf"))
+HTML(string=html_doc, base_url=str(PROPOSAL_DIR)).write_pdf(str(PROPOSAL_DIR / OUTPUT))
 print("PDF written.")

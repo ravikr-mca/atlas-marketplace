@@ -79,9 +79,21 @@ update came from its own action or another LP's.
   AWS resources, explicit consent/purpose fields on KYC data collection, and the
   audit-log-by-default design above exist because of this, not despite it.
 
+### What the prototype implements today
+
+The prototype enforces the same model against a mock API, so the behaviour can be
+demonstrated rather than described: mock sign-in (staff through a mock Entra ID chooser,
+external users by e-mail and password), 30-minute sliding sessions, lockout after five
+failed attempts, and one permissions table (role × organization accreditation × ownership)
+that both refuses requests in the API (401/403/409/422) and explains disabled actions in the
+UI. Tenant scoping, accreditation approval by an admin, and an append-only audit trail are
+implemented and covered by tests. Deliberately not production-grade: the session token sits
+in `sessionStorage` (production uses an httpOnly, Secure, SameSite cookie via Sanctum), and
+there is no real identity provider, MFA or password hashing.
+
 ## Performance and quality
 
-Route-level code splitting per feature area; MUI X Data Grid's built-in virtualization
+Route-level code splitting per feature area (planned for production — the prototype ships a single bundle); MUI X Data Grid's built-in virtualization
 for the GP investor pipeline and LP watchlist (both genuinely data-dense views); Sentry
 for frontend error and performance monitoring; WCAG AA as the accessibility floor
 (keyboard navigation, focus management in dialogs, color contrast — see `DESIGN.md`'s

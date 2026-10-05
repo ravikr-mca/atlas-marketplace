@@ -61,6 +61,14 @@ Mirrors Greenstone’s own business: GCC investors ↔ global fund managers. It 
 </div></div>
 
 <h2 style="margin-top:6px">Honest scope — designed in the proposal, not yet in the prototype</h2>
-<div style="margin-bottom:3px">Messaging threads · listing-creation wizard · GP allocation override · full discovery filters (geography, vintage, ticket fit) · glossary/consent gates (NDA, risk acknowledgement) · route-level code splitting (bundle ≈ 2 MB) · real-time (Pusher) · Playwright E2E. Each is specified in <code>proposal/technical-approach.md</code> with when and why I’d add it; I chose depth in the transaction and trust core over breadth.</div>
-<div style="color:#444;font-size:7.6pt;margin-top:3px">AI disclosure: I directed every decision; Claude Code executed. Demo credentials are mock, test-only and reserved-domain; no real people or data.</div>
+<div style="margin-bottom:3px">Messaging threads · listing-creation wizard · GP allocation override · full discovery filters (geography, vintage, ticket fit) · glossary/consent gates (NDA, risk acknowledgement) · route-level code splitting (bundle ≈ 2 MB) · real-time (Pusher) · Playwright E2E. Each is specified in the attached <b>Technical Approach</b> PDF with when and why I’d add it; I chose depth in the transaction and trust core over breadth.</div>
+<h2 style="margin-top:6px">Test logins (mock, test-only — no real accounts or people)</h2>
+<table><tr><th>Persona</th><th>Sign-in</th><th>What it shows</th></tr>
+<tr><td>Omar Al Farsi — investor</td><td><code>omar.alfarsi@albarari.test</code></td><td>Verified: full investing journey</td></tr>
+<tr><td>Faisal Al Otaibi — investor</td><td><code>faisal.alotaibi@gulfpension.test</code></td><td>Accreditation pending: blocked actions explain why (Layla can approve him)</td></tr>
+<tr><td>Yusuf Saleh — investor</td><td><code>yusuf.saleh@salehprivate.test</code></td><td>Not accredited: empty state</td></tr>
+<tr><td>Elena Marsh — manager</td><td><code>elena.marsh@meridiangrowth.test</code></td><td>Verified: pipeline, allocations, decline with reason</td></tr>
+<tr><td>Tomas Brandt — manager</td><td><code>tomas.brandt@northgatesecondaries.test</code></td><td>Pending: can draft, cannot publish</td></tr>
+<tr><td>Layla Haddad — admin · Arjun Mehta — compliance</td><td>button “Greenstone staff — sign in with Entra ID”, then pick the name</td><td>Staff use SSO only (no password): approvals; read-only oversight</td></tr></table>
+<div style="margin-top:2px">Password for all investor/manager accounts: <code>AtlasDemo!2026</code>. Quickest route: just click a persona card on the login page. “Reset demo data” in the account menu restores the seed.</div>
 </body></html>
