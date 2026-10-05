@@ -9,6 +9,8 @@ institutions, UHNWIs) discover, diligence, submit indications of interest, get a
 and close. See [`proposal/concept.md`](proposal/concept.md) for the full narrative and
 [`DESIGN.md`](DESIGN.md) for the design system.
 
+**Live demo:** https://atlas-marketplace-sigma.vercel.app · **One-page summary:** [`proposal/Atlas-Talk-Sheet.pdf`](proposal/Atlas-Talk-Sheet.pdf)
+
 ## Stack
 
 React + TypeScript + Vite, MUI (`createTheme` themed to Greenstone's real brand), MUI X

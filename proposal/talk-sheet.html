@@ -1,0 +1,66 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Atlas Marketplace — one-page talk sheet</title>
+<style>
+@page{size:A4;margin:11mm 12mm}
+*{box-sizing:border-box}
+body{font:8.6pt/1.32 "Helvetica Neue",Arial,sans-serif;color:#0a0a0a;margin:0}
+h1{font:600 19pt Georgia,serif;color:#014623;margin:0}
+h2{font:600 9.6pt Georgia,serif;color:#014623;margin:0 0 3px;border-bottom:1.5px solid #014623;padding-bottom:2px}
+.sub{color:#444;margin:2px 0 7px}
+.top{display:flex;gap:8px;margin-bottom:7px}
+.box{border:1px solid #cfd8d2;border-radius:5px;padding:6px 8px;flex:1}
+.g{background:#E4EEE7}
+.cols{display:flex;gap:10px}.cols>div{flex:1}
+ul{margin:0;padding-left:12px}li{margin:0 0 2.2px}
+b{color:#014623}
+table{border-collapse:collapse;width:100%;font-size:8pt}
+td,th{border:1px solid #cfd8d2;padding:2px 4px;text-align:left;vertical-align:top}
+th{background:#E4EEE7}
+.tag{font-size:7pt;padding:0 3px;border-radius:3px;background:#014623;color:#fff}.tag.d{background:#7a7a7a}
+code{font-size:7.8pt;background:#f1f1f1;padding:0 2px}
+</style></head><body>
+<h1>Atlas Marketplace</h1>
+<div class="sub">A private-markets placement marketplace — fund managers (GPs) raise capital from verified investors (LPs). Senior Frontend Engineer task for Greenstone · Ravi Kumar</div>
+
+<div class="top">
+<div class="box g"><h2>Open it</h2>
+<b>Live:</b> atlas-marketplace-sigma.vercel.app<br><b>Code:</b> github.com/ravikr-mca/atlas-marketplace<br>
+<b>Sign in:</b> click a persona card (demo only, no real accounts).<br>
+<b>2-minute tour:</b> <b>Omar</b> (verified investor) → open a fund → submit an indication → Dashboard.
+<b>Faisal</b> (pending) → every blocked action explains why. <b>Elena</b> (manager) → pipeline, decline with reason. <b>Layla</b> (admin, via mock Entra) → Approvals → approve an org, then re-open as that org.</div>
+<div class="box"><h2>Why this category</h2>
+Mirrors Greenstone’s own business: GCC investors ↔ global fund managers. It is book-building, not e-commerce bidding: indications of interest, allocation against a hard cap, pro-rata scale-back, then subscription and funding. That shapes every technical decision below.</div></div>
+
+<div class="cols"><div>
+<h2>What is built (and runs live)</h2>
+<ul>
+<li><b>Discovery &amp; diligence:</b> fund list (strategy filter), fund detail with Tiptap narrative, net-IRR-vs-benchmark chart, data room, live % subscribed.</li>
+<li><b>Indication → allocation:</b> server-authoritative submit, <b>idempotency key</b>, scale-back at the hard cap, min-commitment, close-date and duplicate checks.</li>
+<li><b>State machine:</b> 11 statuses, one transition table shared by API, UI and tests; capacity released on withdraw/decline, full book reopens.</li>
+<li><b>Login &amp; sessions:</b> persona login, staff via mock Entra SSO, 30-min sliding expiry, lockout after 5 failures, deep-link return, 401 handled in one place.</li>
+<li><b>Authorization, enforced twice:</b> one permissions table (role × accreditation × ownership) drives UI explanations <i>and</i> API refusals (401/403/409/422). Tenant scoping: a GP never sees another GP’s investors.</li>
+<li><b>Trust:</b> verification badges, organization profiles (track record + IRR-by-vintage), <b>admin approvals</b> that change permissions immediately, audited and notified.</li>
+<li><b>Audit trail:</b> every login and state change appended with actor, time and reason.</li>
+<li><b>Seed data:</b> every enum value and status has data (a test fails if one doesn’t): 6 managers, 8 investors, 12 funds, 28 indications.</li>
+<li><b>Quality:</b> 55 Vitest tests (allocation, state machine, permission matrix, authz, lockout, expiry, approvals); responsive at 375px; reduced-motion respected; WCAG-minded contrast.</li></ul>
+</div><div>
+<h2>How it maps to the brief</h2>
+<table><tr><th>Brief asks for</th><th>Where to see it</th></tr>
+<tr><td>Buyer/seller relationship &amp; trust</td><td>Profiles, badges, approvals, tenant-scoped views</td></tr>
+<tr><td>Listing &amp; valuation</td><td>Fund detail: terms, track record, IRR vs benchmark, data room</td></tr>
+<tr><td>Bidding / purchase</td><td>Indication flow, allocation, accept → KYC → signed → funded</td></tr>
+<tr><td>Concurrency &amp; transaction state</td><td>Server-authoritative allocation, idempotency, state machine + tests</td></tr>
+<tr><td>Frontend architecture</td><td>Redux = session only; TanStack Query = all server data; feature folders; typed API boundary</td></tr>
+<tr><td>Security</td><td>RBAC + accreditation + ownership in UI and API; lockout; audit; DEMO-labelled mock auth</td></tr>
+<tr><td>Quality &amp; delivery</td><td>Tests, CI-ready build, Vercel; written proposal + diagrams in <code>/proposal</code></td></tr></table>
+<h2 style="margin-top:6px">Decisions worth discussing</h2>
+<ul>
+<li><b>Redux <i>and</i> TanStack Query?</b> Different jobs: Redux never caches API data; the identity (“me”) is a query, so approvals apply with no reload.</li>
+<li><b>Mock API, not MSW:</b> functions return copies across a simulated network boundary; MSW is the first thing I’d add.</li>
+<li><b>Tokens in sessionStorage</b> is a prototype shortcut; production = httpOnly Secure SameSite cookie (Sanctum) + Entra ID.</li>
+<li><b>Visual:</b> Greenstone green foundation; sky-blue reserved for investor actions.</li></ul>
+</div></div>
+
+<h2 style="margin-top:6px">Honest scope — designed in the proposal, not yet in the prototype</h2>
+<div style="margin-bottom:3px">Messaging threads · listing-creation wizard · GP allocation override · full discovery filters (geography, vintage, ticket fit) · glossary/consent gates (NDA, risk acknowledgement) · route-level code splitting (bundle ≈ 2 MB) · real-time (Pusher) · Playwright E2E. Each is specified in <code>proposal/technical-approach.md</code> with when and why I’d add it; I chose depth in the transaction and trust core over breadth.</div>
+<div style="color:#444;font-size:7.6pt;margin-top:3px">AI disclosure: I directed every decision; Claude Code executed. Demo credentials are mock, test-only and reserved-domain; no real people or data.</div>
+</body></html>
